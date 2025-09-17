@@ -63,4 +63,18 @@ class DatabaseHelper {
     )
     ''');
   }
+
+  //VehicleSettings_method-----
+  Future<void> saveVehicleSettings(VehicleSettings settings) async {
+    final db = await instance.database;
+    await db.insert(
+      'VehicleSettings',
+      settings.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<VehicleSettings?> getVehicleSettings() async {
+    fi
+  }
 }
