@@ -64,7 +64,7 @@ class DatabaseHelper {
     ''');
   }
 
-  //VehicleSettings_method-----
+  //VehicleSettings_method(TBL-01)-----
   Future<void> saveVehicleSettings(VehicleSettings settings) async {
     final db = await instance.database;
     await db.insert(
@@ -75,6 +75,21 @@ class DatabaseHelper {
   }
 
   Future<VehicleSettings?> getVehicleSettings() async {
-    fi
+    final db = await instance.database;
+    final maps = await db.query(
+      'VehicleSettings',
+      where: 'id = ?',
+      whereArgs: [1],
+    );
+
+    if (maps.isNotEmpty) {
+      return VehicleSettings(
+        id: maps.first['id'] as int,
+        tankCapacity: maps.first['tank_capacity'] as double,
+        manualFuelEconomy: maps.first['manual_fuel_economy'] as double,
+        updatedAt: maps.first['updated_at'] as String,
+      );
+    }
+    return null;
   }
 }
