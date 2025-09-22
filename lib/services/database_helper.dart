@@ -119,7 +119,26 @@ class DatabaseHelper {
 
   //Tripのメソッド(TBL-03)--
   Future<Trip> createTrip(Trip trip) async {
-    final db = await instace.database;
-    final id = await db.insert('Trips', triptoMap());
-    return trip;//簡略かされた返り値
+    final db = await instance.database;
+    final id = await db.insert('Trips', trip.toMap());
+    return trip; //簡略かされた返り値
+  }
+
+  //古いデータのパッチ整理(BAT-01)--
+  Future<void> deleteOldData() async {
+    final db = await instance.database;
+    final oneYearAgo = DataTime.now().subtract(const Duration(days: 365));
+    final oneYearAgoIso = oneYearAgo.toIso8601String();
+
+    await db.delete(
+      'FuelRecords',
+      where: 'refuel_date < ?',
+      whereArgs: [oneYearAgoIso],
+    );
+    await db.delete(
+      'Trips',
+      where: 'trip_date < ?',
+      whereArgs: [oneYearAgoIso],
+    );
+  }
 }
