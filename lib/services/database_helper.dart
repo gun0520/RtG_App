@@ -92,4 +92,46 @@ class DatabaseHelper {
     }
     return null;
   }
+
+  // --- FuelRecordのメソッド(TBL-02)---
+  Future<FuelRecord> createFuelRecord(FuelRecord record) async {
+    final db = await instance.databse;
+    final id = await db.insert('FuelRecord', record.toMap());
+    return record; //簡略化された返り値
+  }
+
+  Future<List<FuelRecord>> getFuelRecords() async {
+    final db = await instance.database;
+    final maps = await db.query('FuelRecords', orderBy: 'refuel_data DESC');
+    return List.generate(maps.length, (i) {
+      return FuelRecord(
+        id: maps[i]['id'] as int,
+        refuelDate: maps[i]['refuel_data'] as String,
+        fuelAmount: maps[i]['fuel_amount'] as double,
+        paymentAmount: maps[i]['payment_amount'] as int,
+        distanceSinceLastRefuel:
+            maps[i]['distance_since_last_refuel'] as double,
+        calculatedFuelEconomy: maps[i]['calculated_fuel_economy'] as double,
+        createdAt: maps[i]['created_at'] as String,
+      );
+    });
+  }
+
+  //Tripのメソッド(TBL-03)--
+  Future<Trip> createTrip(Trip trip) async {
+    final db = await instace.database;
+    final oneYearAgo = DataTime.now().subtract(const Duration(days: 365));
+    final oneYearAgoIso = oneYearAgo.toIso8601String();
+
+    await db.delete(
+      'FuelRecord',
+      where: 'refuel_date < ?',
+      whereArgs: [oneYearAgoIso],
+    );
+    await db.delete(
+      'Trips',
+      where: 'trip_date < ?',
+      whereArgs: [oneYearAgoIso],
+    );
+  }
 }
