@@ -102,5 +102,15 @@ Widget build(BuildContext context) {
     ],
   ),
   body: Padding()
-    padding:
+    padding: const EdgeInsets.all(16.0),
+    child: Column()
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          children: [
+            // 情報表示カード
+            _buildInfoCard(),
+          ]
+        )
+      ]
 }
