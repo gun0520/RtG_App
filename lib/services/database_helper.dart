@@ -23,13 +23,6 @@ class DatabaseHelper {
     return await openDatabase(path, version: 1, onCreate: _createDB);
   }
 
-  Future<Database> _initDB(String filePath) async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
-
-    return await openDatabase(path, version: 1, onCreate: _createDB);
-  }
-
   Future _createDB(Database db, int version) async {
     //車両設定テーブル(TBL-01)
     await db.execute('''
@@ -95,7 +88,7 @@ class DatabaseHelper {
 
   // --- FuelRecordのメソッド(TBL-02)---
   Future<FuelRecord> createFuelRecord(FuelRecord record) async {
-    final db = await instance.databse;
+    final db = await instance.database;
     final id = await db.insert('FuelRecord', record.toMap());
     return record; //簡略化された返り値
   }
@@ -127,7 +120,7 @@ class DatabaseHelper {
   //古いデータのパッチ整理(BAT-01)--
   Future<void> deleteOldData() async {
     final db = await instance.database;
-    final oneYearAgo = DataTime.now().subtract(const Duration(days: 365));
+    final oneYearAgo = DateTime.now().subtract(const Duration(days: 365));
     final oneYearAgoIso = oneYearAgo.toIso8601String();
 
     await db.delete(

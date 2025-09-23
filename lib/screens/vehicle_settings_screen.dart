@@ -27,13 +27,13 @@ class _VehicleSettingsScreenState extends State<VehicleSettingsScreen> {
     _currentSettings = await DatabaseHelper.instance.getVehicleSettings();
     if (_currentSettings != null) {
       _tankCapacityController.text = _currentSettings!.tankCapacity.toString();
-      _manualFuelEconomyController.text =
-          _currentSettings!.manualFuelEconomy.toString();
+      _manualFuelEconomyController.text = _currentSettings!.manualFuelEconomy
+          .toString();
     }
   }
 
   Future<void> _saveSettings() async {
-    if (_formKey.currentState!.vaildate()) {
+    if (_formKey.currentState!.validate()) {
       final settings = VehicleSettings(
         tankCapacity: double.parse(_tankCapacityController.text),
         manualFuelEconomy: double.parse(_manualFuelEconomyController.text),
@@ -41,9 +41,9 @@ class _VehicleSettingsScreenState extends State<VehicleSettingsScreen> {
       );
       await DatabaseHelper.instance.saveVehicleSettings(settings);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('設定を保存しました')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('設定を保存しました')));
       Navigator.pop(context, true);
     }
   }
@@ -59,7 +59,7 @@ class _VehicleSettingsScreenState extends State<VehicleSettingsScreen> {
           children: [
             TextFormField(
               controller: _tankCapacityController,
-              decoration: const InputDecoration(lebelText: 'タンク総容量(L)'),
+              decoration: const InputDecoration(labelText: 'タンク総容量(L)'),
               keyboardType: TextInputType.number,
               validator: (value) {
                 if (value == null ||
@@ -85,10 +85,7 @@ class _VehicleSettingsScreenState extends State<VehicleSettingsScreen> {
               },
             ),
             const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: _saveSettings,
-              child: const Text('保存'),
-            ),
+            ElevatedButton(onPressed: _saveSettings, child: const Text('保存')),
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text('キャンセル'),
