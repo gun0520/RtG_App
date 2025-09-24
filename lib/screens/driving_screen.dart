@@ -102,7 +102,7 @@ class _DrivingScreenState extends State<DrivingScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    final fuelPercentage = _remainingFuel / _settings!.tanckCapacity;
+    final fuelPercentage = _remainingFuel / _settings!.tankCapacity;
 
     return Scaffold(
       appBar: AppBar(
@@ -139,7 +139,31 @@ class _DrivingScreenState extends State<DrivingScreen> {
               ],
             ),
             //アクションボタン
-            _buttonActionButtons(),
+            _buildActionButtons(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoCard() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildInfoColumn('航続可能距離', _range.toStringAsFixed(0), 'km'),
+            _buildInfoColumn(
+              '今回の走行距離',
+              _currentTripDistance.toStringAsFixed(1),
+              'km',
+            ),
+            _buildInfoColumn(
+              '登録中の燃費',
+              _settings!.manualFuelEconomy.toStringAsFixed(1),
+              'km/L',
+            ),
           ],
         ),
       ),
