@@ -1,11 +1,12 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'fuel_record_input_screen.dart';
 import 'fuel_history_screen.dart';
 import 'vehicle_settings_screen.dart';
 import '../services/database_helper.dart';
 import '../models/vehicle_settings.dart';
-//注:　実際のアプリでは、LocationServiceとNotificationServiceを作成します。
+import 'package:provider/provider.dart';
+import '../services/location_service.dart';
+import '../services/notification_service.dart';
 
 class DrivingScreen extends StatefulWidget {
   const DrivingScreen({super.key});
@@ -15,11 +16,10 @@ class DrivingScreen extends StatefulWidget {
 }
 
 class _DrivingScreenState extends State<DrivingScreen> {
-  bool _isDriving = false;
-  double _currentTripDistance = 0.0;
   double _remainingFuel = 25.5; //プレースホルダー
   double _range = 350.0; //プレースホルダー
   VehicleSettings? _settings;
+  bool _lowFuelNotificationSent = false; // 低残量通知を一度だけ送るためのフラグ
 
   @override
   void initState() {
@@ -49,14 +49,16 @@ class _DrivingScreenState extends State<DrivingScreen> {
   }
 
   void _toggleDriving() {
-    setState(() {
-      _isDriving = !_isDriving;
-      if (_isDriving) {
-        //GPS計測を開始
-      } else {
-        //GPS計測を停止し、走行記録を保存
-      }
-    });
+    final locationService = context.read<LocationService>();
+
+    if (locationService.isTracking) {
+      locationService.stopTracking();
+      // ここでは走行距離をDBに保存するロジックを実装
+      // final distance = locationService.tripDistance;
+      // DatabaseHelper.instance.createTrip(..);
+    } else {
+      locationService.startTracking();
+    }
   }
 
   void _showSettingsMenu() {
@@ -97,56 +99,74 @@ class _DrivingScreenState extends State<DrivingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_settings == null) {
-      //設定は確認中はローディングインジケータなどを表示
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
+    // Constmerを使ってLocationServiceの変更を監視
+    return Consumer<LocationService>(
+      builder: (context, locationService, child) {
+        if (_settings == null) {
+          //設定は確認中はローディングインジケータなどを表示
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
 
-    final fuelPercentage = _remainingFuel / _settings!.tankCapacity;
+        // 燃費計算ロジックはもっと整備課が必要
+        final fuelPercentage = _remainingFuel / _settings!.tankCapacity;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('リアルタイムガソリン残量'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: _showSettingsMenu, //設定ボタン
+        // EIF-02の通知ロジック
+        if (fuelPercentage < 0.15 && !_lowFuelNotificationSent) {
+          NotificationService().showLowFuelAlert();
+          setState(() {
+            _lowFuelNotificationSent = true; //フラグを立てて再通知を防ぐ
+          });
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('リアルタイムガソリン残量'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.settings),
+                onPressed: _showSettingsMenu, //設定ボタン
+              ),
+            ],
           ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // 情報表示カード
-                _buildInfoCard(),
-                const SizedBox(height: 20),
-                //ガソリン残量ゲージ
-                LinearProgressIndicator(
-                  value: fuelPercentage,
-                  minHeight: 20,
-                  backgroundColor: Colors.grey[300],
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    fuelPercentage > 0.15 ? Colors.green : Colors.red, //15％以下で赤
-                  ),
+                Column(
+                  children: [
+                    // 情報表示カード
+                    _buildInfoCard(locationService.tripDistance),
+                    const SizedBox(height: 20),
+                    //ガソリン残量ゲージ
+                    LinearProgressIndicator(
+                      value: fuelPercentage,
+                      minHeight: 20,
+                      backgroundColor: Colors.grey[300],
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        fuelPercentage > 0.15
+                            ? Colors.green
+                            : Colors.red, //15％以下で赤
+                      ),
+                    ),
+                    Text(
+                      'ガソリン残量: ${_remainingFuel.toStringAsFixed(1)}L / ${_settings!.tankCapacity.toStringAsFixed(1)}L',
+                    ),
+                  ],
                 ),
-                Text(
-                  'ガソリン残量: ${_remainingFuel.toStringAsFixed(1)}L / ${_settings!.tankCapacity.toStringAsFixed(1)}L',
-                ),
+                //アクションボタン
+                _buildActionButtons(locationService.isTracking),
               ],
             ),
-            //アクションボタン
-            _buildActionButtons(),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildInfoCard() {
+  Widget _buildInfoCard(double currentTripDistance) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -156,7 +176,7 @@ class _DrivingScreenState extends State<DrivingScreen> {
             _buildInfoColumn('航続可能距離', _range.toStringAsFixed(0), 'km'),
             _buildInfoColumn(
               '今回の走行距離',
-              _currentTripDistance.toStringAsFixed(1),
+              currentTripDistance.toStringAsFixed(1),
               'km',
             ),
             _buildInfoColumn(
@@ -180,18 +200,18 @@ class _DrivingScreenState extends State<DrivingScreen> {
     );
   }
 
-  Widget _buildActionButtons() {
+  Widget _buildActionButtons(bool isDriving) {
     return Column(
       children: [
         //走行開始/停止ボタン
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: _isDriving ? Colors.red : Colors.blue,
+            backgroundColor: isDriving ? Colors.red : Colors.blue,
             minimumSize: const Size(double.infinity, 50),
           ),
           onPressed: _toggleDriving,
           child: Text(
-            _isDriving ? '走行停止' : '走行開始',
+            isDriving ? '走行停止' : '走行開始',
             style: const TextStyle(fontSize: 18),
           ),
         ),

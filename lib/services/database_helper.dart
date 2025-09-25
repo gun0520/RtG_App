@@ -1,5 +1,5 @@
 import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+import 'package:path/path.dart' as p;
 import '../models/vehicle_settings.dart';
 import '../models/fuel_record.dart';
 import '../models/trip.dart';
@@ -18,7 +18,7 @@ class DatabaseHelper {
 
   Future<Database> _initDB(String filePath) async {
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
+    final path = p.join(dbPath, filePath);
 
     return await openDatabase(path, version: 1, onCreate: _createDB);
   }
