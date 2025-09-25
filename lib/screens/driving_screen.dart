@@ -60,7 +60,6 @@ class _DrivingScreenState extends State<DrivingScreen> {
       locationService.startTracking();
     }
   }
-  
 
   void _showSettingsMenu() {
     showModalBottomSheet(
@@ -101,66 +100,70 @@ class _DrivingScreenState extends State<DrivingScreen> {
   @override
   Widget build(BuildContext context) {
     // Constmerを使ってLocationServiceの変更を監視
-    return Consumer<LocationService> (
+    return Consumer<LocationService>(
       builder: (context, locationService, child) {
-    
-      if (_settings == null) {
-        //設定は確認中はローディングインジケータなどを表示
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
-      }
+        if (_settings == null) {
+          //設定は確認中はローディングインジケータなどを表示
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
 
-      // 燃費計算ロジックはもっと整備課が必要
-      final fuelPercentage = _remainingFuel / _settings!.tankCapacity;
+        // 燃費計算ロジックはもっと整備課が必要
+        final fuelPercentage = _remainingFuel / _settings!.tankCapacity;
 
-      // EIF-02の通知ロジック
-      if (fuelPercentage < 0.15 && !_lowFuelNotificationSent) {
-        NotificationService().showLowFuelAlert();
-        setState(() {
-          _lowFuelNotificationSent = true; //フラグを立てて再通知を防ぐ
-        });
-      }
+        // EIF-02の通知ロジック
+        if (fuelPercentage < 0.15 && !_lowFuelNotificationSent) {
+          NotificationService().showLowFuelAlert();
+          setState(() {
+            _lowFuelNotificationSent = true; //フラグを立てて再通知を防ぐ
+          });
+        }
 
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('リアルタイムガソリン残量'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.settings),
-              onPressed: _showSettingsMenu, //設定ボタン
-            ),
-          ],
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                children: [
-                  // 情報表示カード
-                  _buildInfoCard(locationService.tripDistance),
-                  const SizedBox(height: 20),
-                  //ガソリン残量ゲージ
-                  LinearProgressIndicator(
-                    value: fuelPercentage,
-                    minHeight: 20,
-                    backgroundColor: Colors.grey[300],
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      fuelPercentage > 0.15 ? Colors.green : Colors.red, //15％以下で赤
-                    ),
-                  ),
-                  Text(
-                    'ガソリン残量: ${_remainingFuel.toStringAsFixed(1)}L / ${_settings!.tankCapacity.toStringAsFixed(1)}L',
-                  ),
-                ],
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('リアルタイムガソリン残量'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.settings),
+                onPressed: _showSettingsMenu, //設定ボタン
               ),
-              //アクションボタン
-              _buildActionButtons(locationService.isTracking),
             ],
           ),
-        ),
-      );
-    }
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  children: [
+                    // 情報表示カード
+                    _buildInfoCard(locationService.tripDistance),
+                    const SizedBox(height: 20),
+                    //ガソリン残量ゲージ
+                    LinearProgressIndicator(
+                      value: fuelPercentage,
+                      minHeight: 20,
+                      backgroundColor: Colors.grey[300],
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        fuelPercentage > 0.15
+                            ? Colors.green
+                            : Colors.red, //15％以下で赤
+                      ),
+                    ),
+                    Text(
+                      'ガソリン残量: ${_remainingFuel.toStringAsFixed(1)}L / ${_settings!.tankCapacity.toStringAsFixed(1)}L',
+                    ),
+                  ],
+                ),
+                //アクションボタン
+                _buildActionButtons(locationService.isTracking),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildInfoCard(double currentTripDistance) {
@@ -171,8 +174,16 @@ class _DrivingScreenState extends State<DrivingScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             _buildInfoColumn('航続可能距離', _range.toStringAsFixed(0), 'km'),
-            _buildInfoColumn('今回の走行距離', currentTripDistance.toStringAsFixed(1),'km'),
-            _buildInfoColumn('登録中の燃費',_settings!.manualFuelEconomy.toStringAsFixed(1),'km/L'),
+            _buildInfoColumn(
+              '今回の走行距離',
+              currentTripDistance.toStringAsFixed(1),
+              'km',
+            ),
+            _buildInfoColumn(
+              '登録中の燃費',
+              _settings!.manualFuelEconomy.toStringAsFixed(1),
+              'km/L',
+            ),
           ],
         ),
       ),
@@ -224,4 +235,3 @@ class _DrivingScreenState extends State<DrivingScreen> {
     );
   }
 }
-
