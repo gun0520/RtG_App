@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/driving_screen.dart';
 import 'screens/vehicle_settings_screen.dart';
 import 'services/database_helper.dart';
 import 'services/location_service.dart';
 import 'services/notification_service.dart';
+import 'viewmodels/driving_view_model.dart';
 
 // ViewModel/ChangeNotifier はここで作成・提供します。
 // この例では、簡潔さのため完全な状態管理の実装は含んでいません。
@@ -13,16 +15,41 @@ void main() async {
   //Flutterのバインディングを初期化
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 通知サービスの初期化
+  // 各サービスをインスタンス化
   await NotificationService().init();
+  final locationService = LocationService();
+  final dbHelper = DatabaseHelper.instance;
 
-  //初期設定が存在するか確認
-  final settings = await DatabaseHelper.instance.getVehicleSettings();
+  //[ロジック３]BAT-01 バッチ処理の実装
+  final prefs = await SharedPreferences.getInstance();
+  final lastBatchRunString = prefs.getString('lastBatchRun');
+  if (lastBatchRunString != null) {
+    final lastBatchRun = DateTime.parse(lastBatchRunString);
+    if (DateTime.now().difference(lastBatchRun).inDays >= 30) {
+      await dbHelper.deleteOldData();
+      await prefs.setString('lastBatchRun', DateTime.now().toIso8601String());
+    }
+  } else {
+    //初回実行時は日時を記録
+    await prefs.setString('lastBatchRun', DateTime.now().toIso8601String());
+  }
+
+  final settings = await dbHelper.getVehicleSettings();
 
   runApp(
     // MultiProviderで複数のサービスをウィジェットツリーに提供
     MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => LocationService())],
+      providers: [
+        //LocationServiceはアプリのどこからでもアクセス可能に
+        ChangeNotifierProvider.value(value: locationService),
+        //DrivingViewModelにLocationServiceを渡してインスタンス化
+        ChangeNotifierProvider(
+          create: (context) => DrivingViewModel(
+            //Provider経由でLocationServiceインスタンスを渡す
+            Provider.of<LocationService>(context, listen: false),
+          ),
+        ),
+      ],
       child: MyApp(hasSettings: settings != null),
     ),
   );
