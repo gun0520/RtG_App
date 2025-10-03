@@ -13,9 +13,9 @@ class DrivingViewModel with ChangeNotifier {
 
   VehicleSettings? settings;
   double _remainingFuel = 0.0;
-  final double _range = 0.0;
+  double _range = 0.0;
   bool _isLoading = true;
-  final bool _lowFuelNotificationSent = false;
+  bool _lowFuelNotificationSent = false;
 
   double get remainingFuel => _remainingFuel;
   double get range => _range;
@@ -103,12 +103,20 @@ class DrivingViewModel with ChangeNotifier {
 
   /// 航続可能距離を更新する
   void _updateRange() {
-    // ... (このメソッドは変更なし)
+    if (settings != null && settings!.manualFuelEconomy > 0) {
+      _range = _remainingFuel * settings!.manualFuelEconomy;
+    } else {
+      _range = 0.0;
+    }
   }
 
   /// ガソリン残量低下通知をチェック
   void _checkForLowFuel() {
-    // ... (このメソッドは変更なし)
+    if (settings == null) return;
+    if (fuelPercentage < 0.15 && !_lowFuelNotificationSent) {
+      _notificationService.showLowFuelAlert(); // NotificationServiceに通知表示を指示
+      _lowFuelNotificationSent = true;
+    }
   }
 
   @override

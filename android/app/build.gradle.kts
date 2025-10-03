@@ -23,7 +23,7 @@ val flutterVersionName = localProperties().getProperty("flutter.versionName") ?:
 
 android {
     // ▼▼▼【重要】この名前がアプリの唯一の正しい名前になります ▼▼▼
-    namespace = "com.example.realtime_gasorin"
+    namespace = "com.example.rtg_app_final"
     compileSdk = 36
 
     compileOptions {
@@ -43,7 +43,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.realtime_gasorin"
+        applicationId = "com.example.rtg_app_final"
         minSdk = flutter.minSdkVersion
         targetSdk = 36
         versionCode = flutterVersionCode

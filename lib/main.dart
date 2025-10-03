@@ -8,9 +8,6 @@ import 'services/location_service.dart';
 import 'services/notification_service.dart';
 import 'viewmodels/driving_view_model.dart';
 
-// ViewModel/ChangeNotifier はここで作成・提供します。
-// この例では、簡潔さのため完全な状態管理の実装は含んでいません。
-
 void main() async {
   //Flutterのバインディングを初期化
   WidgetsFlutterBinding.ensureInitialized();

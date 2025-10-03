@@ -13,7 +13,7 @@ class NotificationService {
   Future<void> init() async {
     // android用の初期化設定
     const AndroidInitializationSettings androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_lancher');
+        AndroidInitializationSettings('@mipmap/ic_launcher');
 
     //IOS用の初期化設定
     const DarwinInitializationSettings iosSettings =
