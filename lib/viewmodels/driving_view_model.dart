@@ -13,9 +13,9 @@ class DrivingViewModel with ChangeNotifier {
 
   VehicleSettings? settings;
   double _remainingFuel = 0.0;
-  double _range = 0.0;
+  final double _range = 0.0;
   bool _isLoading = true;
-  bool _lowFuelNotificationSent = false;
+  final bool _lowFuelNotificationSent = false;
 
   double get remainingFuel => _remainingFuel;
   double get range => _range;
