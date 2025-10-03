@@ -1,3 +1,5 @@
+// android/app/build.gradle.kts
+
 import java.util.Properties
 import java.io.FileInputStream
 
@@ -20,14 +22,13 @@ val flutterVersionCode = localProperties().getProperty("flutter.versionCode")?.t
 val flutterVersionName = localProperties().getProperty("flutter.versionName") ?: "1.0"
 
 android {
+    // ▼▼▼【重要】この名前がアプリの唯一の正しい名前になります ▼▼▼
     namespace = "com.example.realtime_gasorin"
     compileSdk = 36
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-        
-        // ▼▼▼【修正点①】脱糖化(desugaring)を有効にする設定を追加 ▼▼▼
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
         isCoreLibraryDesugaringEnabled = true
     }
 
@@ -44,7 +45,7 @@ android {
     defaultConfig {
         applicationId = "com.example.realtime_gasorin"
         minSdk = flutter.minSdkVersion
-        targetSdk = 34
+        targetSdk = 36
         versionCode = flutterVersionCode
         versionName = flutterVersionName
         multiDexEnabled = true
@@ -64,7 +65,5 @@ flutter {
 dependencies {
     implementation(kotlin("stdlib-jdk7"))
     implementation("androidx.multidex:multidex:2.0.1")
-
-    // ▼▼▼【修正点②】脱糖化(desugaring)のためのライブラリを追加 ▼▼▼
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }
