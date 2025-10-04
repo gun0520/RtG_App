@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../models/vehicle_settings.dart';
+// ▼▼▼【修正点】drift関連のファイルをインポート ▼▼▼
+import 'package:drift/drift.dart' show Value; // Companionで使うValueをインポート
+import '../services/database.dart'; // driftが生成したVehicleSettingモデルをインポート
 import '../services/database_helper.dart';
 import 'driving_screen.dart';
 
@@ -15,7 +17,8 @@ class _VehicleSettingsScreenState extends State<VehicleSettingsScreen> {
   final _tankCapacityController = TextEditingController();
   final _fuelEconomyController = TextEditingController();
 
-  VehicleSettings? _existingSettings;
+  // ▼▼▼【修正点】変数の型をdriftが生成した `VehicleSetting` に変更 ▼▼▼
+  VehicleSetting? _existingSettings;
   bool _isLoading = true;
 
   @override
@@ -26,6 +29,7 @@ class _VehicleSettingsScreenState extends State<VehicleSettingsScreen> {
 
   // 既存の設定をDBから読み込む
   Future<void> _loadSettings() async {
+    // getVehicleSettingsが返すのは新しい `VehicleSetting?` 型
     final settings = await DatabaseHelper.instance.getVehicleSettings();
     if (settings != null) {
       setState(() {
@@ -46,34 +50,36 @@ class _VehicleSettingsScreenState extends State<VehicleSettingsScreen> {
     super.dispose();
   }
 
-  // 設定を保存するメソッド（これがsaveVehicleSettingsの正しい実装）
+  // ▼▼▼【修正点】データの保存/更新に `Companion` オブジェクトを使うように全体を書き換え ▼▼▼
   Future<void> _saveSettings() async {
     if (_formKey.currentState!.validate()) {
       final tankCapacity = double.parse(_tankCapacityController.text);
       final fuelEconomy = double.parse(_fuelEconomyController.text);
 
       if (_existingSettings == null) {
-        // --- ① 初めて設定を保存する場合 (INSERT) ---
-        final newSettings = VehicleSettings(
-          tankCapacity: tankCapacity,
-          manualFuelEconomy: fuelEconomy,
+        // --- 新規作成（INSERT）の場合 ---
+        final newSettings = VehicleSettingsCompanion(
+          tankCapacity: Value(tankCapacity),
+          manualFuelEconomy: Value(fuelEconomy),
         );
         await DatabaseHelper.instance.createVehicleSettings(newSettings);
 
-        // 初期設定後は走行画面に置き換える（戻るボタンで戻れないように）
         if (mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (_) => const DrivingScreen()),
           );
         }
       } else {
-        // --- ② 既存の設定を更新する場合 (UPDATE) ---
-        _existingSettings!.tankCapacity = tankCapacity;
-        _existingSettings!.manualFuelEconomy = fuelEconomy;
-        await DatabaseHelper.instance.updateVehicleSettings(_existingSettings!);
+        // --- 更新（UPDATE）の場合 ---
+        final updatedSettings = VehicleSettingsCompanion(
+          id: Value(_existingSettings!.id), // 更新するレコードのIDを指定
+          tankCapacity: Value(tankCapacity),
+          manualFuelEconomy: Value(fuelEconomy),
+        );
+        await DatabaseHelper.instance.updateVehicleSettings(updatedSettings);
 
         if (mounted) {
-          Navigator.of(context).pop(); // 更新後は前の画面に戻る
+          Navigator.of(context).pop();
         }
       }
 

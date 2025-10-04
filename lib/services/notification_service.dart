@@ -1,4 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter/foundation.dart';
 
 class NotificationService {
   //シングルトンインスタンスを作成
@@ -11,6 +12,7 @@ class NotificationService {
 
   //通知サービスの初期化
   Future<void> init() async {
+    if (kIsWeb) return;
     // android用の初期化設定
     const AndroidInitializationSettings androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -31,6 +33,10 @@ class NotificationService {
 
   // EIF-02 & NOTIF-01: ガソリン残量低下アラートを表示する
   Future<void> showLowFuelAlert() async {
+    if (kIsWeb) {
+      print("Webでは通知はサポートされていません。");
+      return;
+    }
     //Android用の通知詳細設定
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
