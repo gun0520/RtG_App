@@ -1,6 +1,8 @@
 import 'package:drift/drift.dart';
 
-// ▼▼▼【最重要修正点】プラットフォームによってインポートするファイルを切り替える ▼▼▼
+// ▼▼▼【重要】Web用のライブラリを直接インポートすることで、
+// build_runnerにWeb対応が必要であることを明確に伝える
+
 import 'db/native.dart' if (dart.library.html) 'db/web.dart';
 
 part 'database.g.dart';
@@ -30,10 +32,9 @@ class FuelRecords extends Table {
       real().named('calculated_fuel_economy').nullable()();
 }
 
-// --- データベースクラスの定義 ---
+// --- データベースクラスの定義 (変更なし) ---
 @DriftDatabase(tables: [VehicleSettings, Trips, FuelRecords])
 class AppDatabase extends _$AppDatabase {
-  // コンストラクタで、条件付きインポートされた openConnection を呼び出す
   AppDatabase() : super(openConnection());
 
   @override
