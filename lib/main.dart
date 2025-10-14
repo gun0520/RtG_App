@@ -23,7 +23,6 @@ void main() async {
   if (lastBatchRunString != null) {
     final lastBatchRun = DateTime.parse(lastBatchRunString);
     if (DateTime.now().difference(lastBatchRun).inDays >= 30) {
-      await dbHelper.deleteOldData();
       await prefs.setString('lastBatchRun', DateTime.now().toIso8601String());
     }
   } else {

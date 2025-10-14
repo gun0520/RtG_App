@@ -2,8 +2,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // driftが生成したデータクラスやデータベース本体をインポート
-import 'package:realtime_gasorin_app/services/database.dart';
-import 'package:drift/drift.dart' as drift; // Companionを使うために必要
 import '../services/database_helper.dart';
 import '../services/location_service.dart';
 import '../services/notification_service.dart';
@@ -62,10 +60,8 @@ class DrivingViewModel with ChangeNotifier {
     _locationService.stopTracking();
     if (distance > 0.1) {
       // データの挿入には`Companion`を使う
-      final trip = TripsCompanion(
-        distance: drift.Value(distance),
-        date: drift.Value(DateTime.now().toIso8601String()),
-      );
+      final trip = Trip(
+          id: 0, distance: distance, date: DateTime.now().toIso8601String());
       await _dbHelper.createTrip(trip);
     }
     final prefs = await SharedPreferences.getInstance();
@@ -98,23 +94,18 @@ class DrivingViewModel with ChangeNotifier {
     if (amount > 0 && totalDistance > 0) {
       actualEconomy = totalDistance / amount;
     }
-    final newRecord = FuelRecordsCompanion(
-      fuelAmount: drift.Value(amount),
-      totalPrice: drift.Value(price),
-      refuelDate: drift.Value(DateTime.now().toIso8601String()),
-      calculatedFuelEconomy: drift.Value(
-        actualEconomy > 0 ? actualEconomy : null,
-      ),
+    final newRecord = FuelRecord(
+      id: 0,
+      fuelAmount: amount,
+      totalPrice: price,
+      refuelDate: DateTime.now().toIso8601String(),
+      calculatedFuelEconomy: actualEconomy > 0 ? actualEconomy : null,
     );
     await _dbHelper.createFuelRecord(newRecord);
+
     if (actualEconomy > 0 && settings != null) {
-      final updatedSettings = VehicleSettingsCompanion(
-        id: drift.Value(settings!.id),
-        manualFuelEconomy: drift.Value(actualEconomy),
-      );
-      await _dbHelper.updateVehicleSettings(updatedSettings);
-      // settingsオブジェクトも更新
-      settings = (await _dbHelper.getVehicleSettings())!;
+      settings!.manualFuelEconomy = actualEconomy;
+      await _dbHelper.updateVehicleSettings(settings!);
     }
     _remainingFuel = settings?.tankCapacity ?? 0.0;
     final prefs = await SharedPreferences.getInstance();

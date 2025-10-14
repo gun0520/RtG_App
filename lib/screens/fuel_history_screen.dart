@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../services/database.dart';
 import '../services/database_helper.dart';
 
 class FuelHistoryScreen extends StatefulWidget {

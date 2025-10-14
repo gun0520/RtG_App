@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-// ▼▼▼【修正点】drift関連のファイルをインポート ▼▼▼
-import 'package:drift/drift.dart' show Value; // Companionで使うValueをインポート
-import '../services/database.dart'; // driftが生成したVehicleSettingモデルをインポート
 import '../services/database_helper.dart';
 import 'driving_screen.dart';
 
@@ -17,7 +14,6 @@ class _VehicleSettingsScreenState extends State<VehicleSettingsScreen> {
   final _tankCapacityController = TextEditingController();
   final _fuelEconomyController = TextEditingController();
 
-  // ▼▼▼【修正点】変数の型をdriftが生成した `VehicleSetting` に変更 ▼▼▼
   VehicleSetting? _existingSettings;
   bool _isLoading = true;
 
@@ -58,9 +54,10 @@ class _VehicleSettingsScreenState extends State<VehicleSettingsScreen> {
 
       if (_existingSettings == null) {
         // --- 新規作成（INSERT）の場合 ---
-        final newSettings = VehicleSettingsCompanion(
-          tankCapacity: Value(tankCapacity),
-          manualFuelEconomy: Value(fuelEconomy),
+        final newSettings = VehicleSetting(
+          id: 0,
+          tankCapacity: tankCapacity,
+          manualFuelEconomy: fuelEconomy,
         );
         await DatabaseHelper.instance.createVehicleSettings(newSettings);
 
@@ -70,13 +67,9 @@ class _VehicleSettingsScreenState extends State<VehicleSettingsScreen> {
           );
         }
       } else {
-        // --- 更新（UPDATE）の場合 ---
-        final updatedSettings = VehicleSettingsCompanion(
-          id: Value(_existingSettings!.id), // 更新するレコードのIDを指定
-          tankCapacity: Value(tankCapacity),
-          manualFuelEconomy: Value(fuelEconomy),
-        );
-        await DatabaseHelper.instance.updateVehicleSettings(updatedSettings);
+        _existingSettings!.tankCapacity = tankCapacity;
+        _existingSettings!.manualFuelEconomy = fuelEconomy;
+        await DatabaseHelper.instance.updateVehicleSettings(_existingSettings!);
 
         if (mounted) {
           Navigator.of(context).pop();
