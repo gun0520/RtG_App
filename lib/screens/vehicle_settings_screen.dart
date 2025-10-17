@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/database_helper.dart';
 import 'driving_screen.dart';
 
@@ -55,6 +56,11 @@ class _VehicleSettingsScreenState extends State<VehicleSettingsScreen> {
       final fuelEconomy = double.parse(_fuelEconomyController.text);
 
       if (_existingSettings == null) {
+        final prefs = await SharedPreferences.getInstance();
+        final initialFuelAmount =
+            tankCapacity * (_initialFuelPercentage / 100.0);
+        await prefs.setDouble('remainingFuel', initialFuelAmount);
+
         // --- 新規作成（INSERT）の場合 ---
         final newSettings = VehicleSetting(
           id: 0,
