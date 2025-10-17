@@ -17,6 +17,8 @@ class _VehicleSettingsScreenState extends State<VehicleSettingsScreen> {
   VehicleSetting? _existingSettings;
   bool _isLoading = true;
 
+  double _initialFuelPercentage = 100.0;
+
   @override
   void initState() {
     super.initState();
@@ -140,6 +142,29 @@ class _VehicleSettingsScreenState extends State<VehicleSettingsScreen> {
                 },
               ),
               const SizedBox(height: 24),
+              if (_existingSettings == null)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '現在の燃料残量: ${_initialFuelPercentage.toStringAsFixed(0)}%',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    Slider(
+                      value: _initialFuelPercentage,
+                      min: 0,
+                      max: 100,
+                      divisions: 100,
+                      label: '${_initialFuelPercentage.toStringAsFixed(0)}%',
+                      onChanged: (double value) {
+                        setState(() {
+                          _initialFuelPercentage = value;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
               ElevatedButton(
                 onPressed: _saveSettings,
                 style: ElevatedButton.styleFrom(
